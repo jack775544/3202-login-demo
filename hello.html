@@ -9,6 +9,10 @@
     <div id="message">
         <button id="go">Go</button>
     </div>
+    <br>
+    <div>
+        <button id="logout">Logout</button>
+    </div>
 </div>
 
 <script src="js/jquery.min.js" type="application/javascript"></script>
@@ -16,17 +20,17 @@
 <script src="js/index.js" type="application/javascript"></script>
 <script type="application/javascript">
     $("#go").click(function (e) {
-        go();
-    });
-
-    function go() {
-        var store = window.localStorage;
-        var token = store.getItem("token");
-        var username = store.getItem("username");
-        $.post("backend/message.php", {"token": token, "username": username}, function (r) {
+        $.post("backend/message.php", function (r) {
             alert(r);
         });
-    }
+    });
+
+    $("#logout").click(function(e){
+        $.post("backend/logout.php", function (r) {
+            alert("You have been logged out");
+            window.location = "index.html";
+        })
+    });
 </script>
 
 </body>

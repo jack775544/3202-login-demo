@@ -4,9 +4,7 @@ $("#login-form").submit(function(e){
 
     $.post('backend/login.php', $('#login-form').serialize(), function (r) {
         if (r.auth === true) {
-            var store = window.localStorage;
-            store.setItem("token", r.token);
-            store.setItem("username", r.username);
+            alert("You have been logged in successfully");
             window.location = "hello.html";
         } else {
             alert("You aren't authorised to log in");

@@ -1,6 +1,15 @@
 <?php
+/**
+ * Admin functionality for the server side
+ * Note: session_start() MUST be called before importing this code
+ */
 
-function connect_database(){
+/**
+ * Makes a database connection
+ * @return PDO The connection to the database
+ */
+function connect_database()
+{
     $database_path = $_SERVER['DOCUMENT_ROOT'] . '/backend/database.db';
     $database_file = 'sqlite:' . $database_path;
     $db = new PDO($database_file) or die("Cannot open database");
@@ -38,51 +47,53 @@ function check_password($password, $hash)
 }
 
 /**
- * Checks to see if a user can log in and if so return their token.
- * Note if no password is present, but the token is then the method can still perform auth
- * Conversely if no token is present and the password is then the method can still perform auth
+ * Checks to see if the user can or is logged in and if given a username and password, log them in
  * @param $username string The username of the user to check
  * @param $password string The password of the user to check
- * @param $token string The login token of the user to check
- * @return string The user token as a string on success or null on fail
+ * @return bool True iff the user is authenticated
  */
-function check_login($username, $password, $token)
+function check_login($username = null, $password = null)
 {
+    // Check if their current session is valid
+    if (isset($_SESSION['auth']) && (!isset($username) || !isset($password))) {
+        return $_SESSION['auth'] == true;
+    }
+
     // Set up database
     $db = connect_database();
 
-    // Check if their current token is valid
-    if (isset($token) && isset($username)) {
-        $query = $db->prepare("SELECT count(*) FROM USERS WHERE username = ? AND token = ?");
-        $query->execute(array($username, $token));
-
-        $count = $query->fetch(PDO::FETCH_NUM);
-        $user_count = $count[0];
-        // They have given us the correct token and username, so return the token they have given us
-        if ($user_count == 1) {
-            return $token;
-        }
-    }
-
     // Password auth next
     if (isset($username) && isset($password)) {
-        $query = $db->prepare("SELECT username, password, token FROM USERS WHERE username = ?");
+        $query = $db->prepare("SELECT username, password FROM USERS WHERE username = ?");
         $query->execute(array($username));
         $user = $query->fetch(PDO::FETCH_NUM);
         // If we actually got a user back
         if ($user != false) {
             $password_correct = check_password($password, $user[1]);
             if ($password_correct == true) {
-                return $user[2];
+                $_SESSION['auth'] = true;
+                $_SESSION['username'] = $username;
+                return true;
             }
         }
     }
 
-    // Their credentials don't match, so return a failure
-    return null;
+    // Their credentials don't match, so return a failure, failed auth results in potential embarrassment by peers,
+    // hope of a password reset feature, and possibly drawing bad tarot cards. Also their session is no longer
+    // authenticated.
+    $_SESSION['auth'] = false;
+    return false;
 }
 
-function create_user($username, $password) {
+/**
+ * Creates a user with the given username and password and inserts them into the database
+ * Note that the created user is NOT authenticated
+ * @param $username string The username of the user to be created
+ * @param $password string The password of the user to be created
+ * @return bool true iff the user was created successfully
+ */
+function create_user($username, $password)
+{
     $db = connect_database();
 
     // See if there is a duplicate username
@@ -93,11 +104,21 @@ function create_user($username, $password) {
 
     // The username does not exist, so create user
     if ($user_count < 1) {
-        $query = $db->prepare("INSERT INTO USERS VALUES (?, ?, ?)");
-        $query->execute(array($username, encrypt_password($password), md5(uniqid(mt_rand(), true))));
+        $query = $db->prepare("INSERT INTO USERS VALUES (?, ?)");
+        $query->execute(array($username, encrypt_password($password)));
         // User has been made, return success
         return true;
     }
 
     return false;
+}
+
+
+function logout_user(){
+    try {
+        session_unset();
+    } catch (Exception $e) {
+        return false;
+    }
+    return true;
 }

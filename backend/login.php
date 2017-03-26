@@ -15,25 +15,23 @@
  * {
  *      "auth": true,
  *      "username": "USERNAME_AS_STRING",
- *      "token": "TOKEN_AS_A_STRING"
  * }
  *
 */
 
+session_start();
 require_once "admin.php";
 
 header('Content-Type: application/json');
 
 $username = null;
 $password = null;
-$token_post = null;
 if (isset($_POST['username'])) $username = $_POST['username'];
 if (isset($_POST['password'])) $password = $_POST['password'];
-if (isset($_POST['token'])) $token_post = $_POST['token'];
 
-$token = check_login($username, $password, $token_post);
-if (isset($token)) {
-    echo json_encode(['auth' => true, 'username' => $_POST['username'], 'token' => $token]);
+$authenticated = check_login($username, $password);
+if ($authenticated == true) {
+    echo json_encode(['auth' => true, 'username' => $_POST['username']]);
     return;
 }
 echo json_encode(['auth' => false]);

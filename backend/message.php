@@ -1,22 +1,15 @@
 <?php
 /*
  * Returns a message to a validated user
- * Takes the following post args:
- * username: the username of the user to get a message for
- * token: auth token for the user
  *
  * And returns a message as text/plain
  */
+session_start();
 require_once "admin.php";
 
 header("Content-Type: text/plain");
 
-$username = null;
-$token_post = null;
-if (isset($_POST['username'])) $username = $_POST['username'];
-if (isset($_POST['token'])) $token_post = $_POST['token'];
-
-$token = check_login($username, null, $token_post);
-if (isset($token)) {
-    echo "Hello " . $_POST['username'] . ", you are logged into the system";
+$authenticated = check_login();
+if ($authenticated == true) {
+    echo "Hello " . $_SESSION['username'] . ", you are logged into the system";
 }
