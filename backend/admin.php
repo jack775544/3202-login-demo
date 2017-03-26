@@ -1,5 +1,13 @@
 <?php
 
+function connect_database(){
+    $database_path = $_SERVER['DOCUMENT_ROOT'] . '/backend/database.db';
+    $database_file = 'sqlite:' . $database_path;
+    $db = new PDO($database_file) or die("Cannot open database");
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $db;
+}
+
 /**
  * Encrypts a password into a strong hash
  * Logic taken from https://alias.io/2010/01/store-passwords-safely-with-php-and-mysql/
@@ -24,7 +32,7 @@ function encrypt_password($password, $cost = 10)
  * @param $hash string The password from the database
  * @return bool true if matching, false if not
  */
-function password_check($password, $hash)
+function check_password($password, $hash)
 {
     return hash_equals($hash, crypt($password, $hash));
 }
@@ -38,13 +46,10 @@ function password_check($password, $hash)
  * @param $token string The login token of the user to check
  * @return string The user token as a string on success or null on fail
  */
-function login_check($username, $password, $token)
+function check_login($username, $password, $token)
 {
     // Set up database
-    $database_path = $_SERVER['DOCUMENT_ROOT'] . '/backend/database.db';
-    $database_file = 'sqlite:' . $database_path;
-    $db = new PDO($database_file) or die("Cannot open database");
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db = connect_database();
 
     // Check if their current token is valid
     if (isset($token) && isset($username)) {
@@ -66,7 +71,7 @@ function login_check($username, $password, $token)
         $user = $query->fetch(PDO::FETCH_NUM);
         // If we actually got a user back
         if ($user != false) {
-            $password_correct = password_check($password, $user[1]);
+            $password_correct = check_password($password, $user[1]);
             if ($password_correct == true) {
                 return $user[2];
             }
@@ -75,4 +80,24 @@ function login_check($username, $password, $token)
 
     // Their credentials don't match, so return a failure
     return null;
+}
+
+function create_user($username, $password) {
+    $db = connect_database();
+
+    // See if there is a duplicate username
+    $query = $db->prepare("SELECT count(*) FROM USERS WHERE username = ?");
+    $query->execute(array($username));
+    $count = $query->fetch(PDO::FETCH_NUM);
+    $user_count = $count[0];
+
+    // The username does not exist, so create user
+    if ($user_count < 1) {
+        $query = $db->prepare("INSERT INTO USERS VALUES (?, ?, ?)");
+        $query->execute(array($username, encrypt_password($password), md5(uniqid(mt_rand(), true))));
+        // User has been made, return success
+        return true;
+    }
+
+    return false;
 }

@@ -31,7 +31,7 @@ if (isset($_POST['username'])) $username = $_POST['username'];
 if (isset($_POST['password'])) $password = $_POST['password'];
 if (isset($_POST['token'])) $token_post = $_POST['token'];
 
-$token = login_check($username, $password, $token_post);
+$token = check_login($username, $password, $token_post);
 if (isset($token)) {
     echo json_encode(['auth' => true, 'username' => $_POST['username'], 'token' => $token]);
     return;

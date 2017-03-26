@@ -16,7 +16,7 @@ $token_post = null;
 if (isset($_POST['username'])) $username = $_POST['username'];
 if (isset($_POST['token'])) $token_post = $_POST['token'];
 
-$token = login_check($username, null, $token_post);
+$token = check_login($username, null, $token_post);
 if (isset($token)) {
     echo "Hello " . $_POST['username'] . ", you are logged into the system";
 }
