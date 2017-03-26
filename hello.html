@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>INFS3202 Demo App</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+<div>
+    <div id="message">
+        <button id="go">Go</button>
+    </div>
+</div>
+
+<script src="js/jquery.min.js" type="application/javascript"></script>
+<script src="js/bootstrap.min.js" type="application/javascript"></script>
+<script src="js/index.js" type="application/javascript"></script>
+<script type="application/javascript">
+    $("#go").click(function (e) {
+        go();
+    });
+
+    function go() {
+        var store = window.localStorage;
+        var token = store.getItem("token");
+        var username = store.getItem("username");
+        $.post("backend/message.php", {"token": token, "username": username}, function (r) {
+            alert(r);
+        });
+    }
+</script>
+
+</body>
+</html>

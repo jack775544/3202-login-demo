@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>INFS3202 Demo App</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+<div>
+    <h1>CREATE USER FORM</h1>
+    <form id="login-form">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input id="username" class="form-control" type="text" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password"></label>
+            <input id="password" class="form-control" type="password" name="password">
+        </div>
+        <input type="submit" class="btn">
+    </form>
+</div>
+
+<script src="js/jquery.min.js" type="application/javascript"></script>
+<script src="js/bootstrap.min.js" type="application/javascript"></script>
+<script type="application/javascript">
+    $("#login-form").submit(function(e){
+        // Stop the form from submitting so we can do it via AJAX
+        e.preventDefault();
+
+        $.post('backend/create_user.php', $('#login-form').serialize(), function (r) {
+            if (r.success == true) {
+                alert("User Created");
+                window.location = "index.html";
+            } else {
+                alert("User Creation Failed");
+            }
+        })
+    });
+</script>
+
+</body>
+</html>
